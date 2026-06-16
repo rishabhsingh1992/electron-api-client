@@ -1,0 +1,501 @@
+/* ============================================================
+   styles.css
+   Uses BEM (Block__Element--Modifier) naming convention.
+
+   BEM quick guide:
+     Block  → a standalone component, e.g. ".url-bar"
+     Element → a part of a block,    e.g. ".url-bar__input"
+     Modifier → a variation/state,   e.g. ".url-bar__send-btn--loading"
+   ============================================================ */
+
+/* --- RESET & BASE ------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #1e1e2e;
+  color: #cdd6f4;
+  overflow: hidden; /* prevents page scrollbar; inner panels scroll individually */
+}
+
+/* --- APP LAYOUT -------------------------------------------- */
+
+/* The root block that fills the whole viewport */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 20px;
+  background-color: #181825;
+  border-bottom: 1px solid #313244;
+}
+
+.app__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #cba6f7;
+  letter-spacing: -0.02em;
+}
+
+.app__subtitle {
+  font-size: 12px;
+  color: #6c7086;
+}
+
+/* Main area holds request builder (top) + response viewer (bottom) */
+.app__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- REQUEST BUILDER SECTION ------------------------------- */
+
+.request-builder {
+  flex: 0 0 46%;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 2px solid #45475a;
+  overflow: hidden;
+}
+
+/* --- URL BAR ----------------------------------------------- */
+
+.url-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #181825;
+  border-bottom: 1px solid #313244;
+}
+
+.url-bar__method {
+  flex-shrink: 0;
+  background-color: #313244;
+  color: #cba6f7;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 90px;
+  appearance: none;          /* remove default browser arrow */
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236c7086'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 26px;
+}
+
+.url-bar__method:focus {
+  outline: none;
+  border-color: #cba6f7;
+}
+
+.url-bar__input {
+  flex: 1;
+  background-color: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 14px;
+  outline: none;
+  min-width: 0; /* allows flexbox shrinking */
+}
+
+.url-bar__input::placeholder {
+  color: #585b70;
+}
+
+.url-bar__input:focus {
+  border-color: #cba6f7;
+  background-color: #363649;
+}
+
+.url-bar__send-btn {
+  flex-shrink: 0;
+  background-color: #cba6f7;
+  color: #1e1e2e;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.url-bar__send-btn:hover:not(:disabled) {
+  background-color: #b4befe;
+}
+
+/* Modifier: loading state while waiting for response */
+.url-bar__send-btn--loading,
+.url-bar__send-btn:disabled {
+  background-color: #45475a;
+  color: #6c7086;
+  cursor: not-allowed;
+}
+
+/* --- TABS COMPONENT ----------------------------------------
+   Reused for both the request section and the response section.
+   ----------------------------------------------------------- */
+
+.tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* The row of tab buttons */
+.tabs__nav {
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  padding: 0 16px;
+  background-color: #181825;
+  border-bottom: 1px solid #313244;
+}
+
+.tabs__tab {
+  background: transparent;
+  color: #6c7086;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s;
+  margin-bottom: -1px; /* overlap the nav border */
+}
+
+.tabs__tab:hover {
+  color: #cdd6f4;
+}
+
+/* Modifier: the currently selected tab */
+.tabs__tab--active {
+  color: #cba6f7;
+  border-bottom-color: #cba6f7;
+}
+
+/* Each tab panel (only the active one is shown) */
+.tabs__panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+  padding: 14px 16px;
+}
+
+/* Modifier: make the active panel visible */
+.tabs__panel--active {
+  display: flex;
+}
+
+/* --- HEADER EDITOR (request headers input) ----------------- */
+
+.header-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* A single key/value row */
+.header-editor__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* The column label row (Key | Value | delete) */
+.header-editor__row--labels {
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #313244;
+}
+
+.header-editor__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c7086;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.header-editor__key,
+.header-editor__value {
+  width: 100%;
+  background-color: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.header-editor__key::placeholder,
+.header-editor__value::placeholder {
+  color: #585b70;
+}
+
+.header-editor__key:focus,
+.header-editor__value:focus {
+  border-color: #cba6f7;
+  background-color: #363649;
+}
+
+.header-editor__delete-btn {
+  background: transparent;
+  color: #6c7086;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.header-editor__delete-btn:hover {
+  color: #f38ba8;
+}
+
+/* The "+ Add Header" button below the rows */
+.header-editor__add-btn {
+  align-self: flex-start;
+  margin-top: 10px;
+  background: transparent;
+  color: #a6e3a1;
+  border: 1px dashed #a6e3a1;
+  border-radius: 4px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.header-editor__add-btn:hover {
+  background-color: rgba(166, 227, 161, 0.1);
+}
+
+/* --- BODY EDITOR ------------------------------------------- */
+
+.body-editor__hint {
+  font-size: 12px;
+  color: #6c7086;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.body-editor {
+  flex: 1;
+  width: 100%;
+  min-height: 80px;
+  background-color: #313244;
+  color: #cdd6f4;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+}
+
+.body-editor::placeholder {
+  color: #585b70;
+}
+
+.body-editor:focus {
+  border-color: #cba6f7;
+  background-color: #363649;
+}
+
+/* --- RESPONSE VIEWER SECTION ------------------------------- */
+
+.response-viewer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- RESPONSE META BAR ------------------------------------- */
+
+.response-meta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 16px;
+  background-color: #181825;
+  border-bottom: 1px solid #313244;
+  min-height: 38px;
+}
+
+.response-meta__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c7086;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Status code badge */
+.response-meta__status {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+/* Modifier: 2xx success responses (green) */
+.response-meta__status--success {
+  background-color: rgba(166, 227, 161, 0.15);
+  color: #a6e3a1;
+}
+
+/* Modifier: 3xx redirect responses (yellow) */
+.response-meta__status--redirect {
+  background-color: rgba(249, 226, 175, 0.15);
+  color: #f9e2af;
+}
+
+/* Modifier: 4xx / 5xx error responses (red) */
+.response-meta__status--error {
+  background-color: rgba(243, 139, 168, 0.15);
+  color: #f38ba8;
+}
+
+.response-meta__time {
+  font-size: 12px;
+  color: #6c7086;
+}
+
+/* --- RESPONSE BODY (pre-formatted code display) ------------ */
+
+.response-body {
+  flex: 1;
+  background-color: #1e1e2e;
+  border: 1px solid #313244;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cdd6f4;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Modifier: placeholder state before any request is made */
+.response-body--placeholder {
+  color: #585b70;
+  font-style: italic;
+  font-family: inherit;
+}
+
+/* --- RESPONSE HEADERS TABLE -------------------------------- */
+
+.header-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-table__empty {
+  color: #585b70;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.header-table__row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  background-color: #26263a;
+}
+
+.header-table__row:nth-child(odd) {
+  background-color: #313244;
+}
+
+.header-table__key {
+  font-size: 13px;
+  font-weight: 600;
+  color: #89b4fa;
+  word-break: break-all;
+}
+
+.header-table__value {
+  font-size: 13px;
+  color: #cdd6f4;
+  word-break: break-all;
+}
+
+/* --- ERROR MESSAGE ----------------------------------------- */
+
+.error-message {
+  color: #f38ba8;
+  background-color: rgba(243, 139, 168, 0.08);
+  border: 1px solid rgba(243, 139, 168, 0.3);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  white-space: pre-wrap;
+}
+
+/* --- SCROLLBAR STYLING (Webkit) ---------------------------- */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #45475a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6c7086;
+}

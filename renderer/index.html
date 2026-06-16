@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!--
+    Content Security Policy (CSP) is a browser security feature.
+    'self' means only load resources from our own app files.
+    'unsafe-inline' is needed here for the inline styles on dynamically highlighted JSON text.
+  -->
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline'"
+  />
+  <title>API Client</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Root container for the whole app (BEM block: "app") -->
+  <div class="app">
+
+    <!-- ===== TOP HEADER BAR ===== -->
+    <header class="app__header">
+      <h1 class="app__title">&#9889; API Client</h1>
+      <p class="app__subtitle">A simple tool for testing HTTP APIs</p>
+    </header>
+
+    <!-- ===== MAIN CONTENT AREA ===== -->
+    <main class="app__main">
+
+      <!-- ===== REQUEST BUILDER (top half) ===== -->
+      <section class="request-builder">
+
+        <!-- URL bar: method selector + URL input + Send button -->
+        <div class="url-bar">
+          <select class="url-bar__method" id="method-select" title="HTTP Method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+
+          <input
+            class="url-bar__input"
+            id="url-input"
+            type="text"
+            placeholder="https://jsonplaceholder.typicode.com/posts/1"
+            autocomplete="off"
+            spellcheck="false"
+          />
+
+          <button class="url-bar__send-btn" id="send-btn">Send</button>
+        </div>
+
+        <!-- Request Tabs: Headers and Body -->
+        <div class="tabs" id="request-tabs">
+          <div class="tabs__nav">
+            <button class="tabs__tab tabs__tab--active" data-tab="req-headers">
+              Headers
+            </button>
+            <button class="tabs__tab" data-tab="req-body">
+              Body
+            </button>
+          </div>
+
+          <!-- Headers Tab Panel -->
+          <div class="tabs__panel tabs__panel--active" id="tab-req-headers">
+            <div class="header-editor">
+              <!-- Column labels row -->
+              <div class="header-editor__row header-editor__row--labels">
+                <span class="header-editor__label">Key</span>
+                <span class="header-editor__label">Value</span>
+                <span></span>
+              </div>
+              <!-- Header input rows are added here by app.js -->
+              <div id="header-rows-container"></div>
+            </div>
+            <button class="header-editor__add-btn" id="add-header-btn">
+              + Add Header
+            </button>
+          </div>
+
+          <!-- Body Tab Panel -->
+          <div class="tabs__panel" id="tab-req-body">
+            <p class="body-editor__hint">
+              Paste JSON, form data, or any text. Used with POST, PUT, PATCH requests.
+            </p>
+            <textarea
+              class="body-editor"
+              id="request-body"
+              placeholder='{"key": "value"}'
+              spellcheck="false"
+            ></textarea>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== RESPONSE VIEWER (bottom half) ===== -->
+      <section class="response-viewer">
+
+        <!-- Status bar: shows status code, time after a request is made -->
+        <div class="response-meta" id="response-meta">
+          <span class="response-meta__label">Response</span>
+          <span class="response-meta__status" id="response-status"></span>
+          <span class="response-meta__time" id="response-time"></span>
+        </div>
+
+        <!-- Response Tabs: Body and Headers -->
+        <div class="tabs" id="response-tabs">
+          <div class="tabs__nav">
+            <button class="tabs__tab tabs__tab--active" data-tab="resp-body">
+              Body
+            </button>
+            <button class="tabs__tab" data-tab="resp-headers">
+              Headers
+            </button>
+          </div>
+
+          <!-- Response Body Tab Panel -->
+          <div class="tabs__panel tabs__panel--active" id="tab-resp-body">
+            <pre
+              class="response-body response-body--placeholder"
+              id="response-body"
+            >Hit Send to see the response here.</pre>
+          </div>
+
+          <!-- Response Headers Tab Panel -->
+          <div class="tabs__panel" id="tab-resp-headers">
+            <div class="header-table" id="response-headers-table">
+              <p class="header-table__empty">No response yet.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- app.js is loaded at the bottom so the DOM is ready when it runs -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
