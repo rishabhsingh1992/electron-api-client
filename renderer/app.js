@@ -8,14 +8,14 @@
 
 // =============================================================
 //  INITIALIZATION
-//  Runs once the HTML page has fully loaded.
+//  This file is loaded as type="module" so it is deferred — the
+//  browser only runs it after the full HTML has been parsed.
+//  No DOMContentLoaded wrapper needed.
 // =============================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-  setupTabSwitching()
-  addHeaderRow() // start with one empty header row
-  setupSendButton()
-})
+setupTabSwitching()
+addHeaderRow()     // start with one empty header row
+setupSendButton()
 
 // =============================================================
 //  TAB SWITCHING

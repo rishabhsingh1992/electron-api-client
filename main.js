@@ -1,13 +1,14 @@
 // main.js
 // This is the "backend" of the Electron app (the main process).
-// It creates the browser window and handles actual HTTP requests
-// using Node.js, since the renderer (browser) cannot make arbitrary HTTP calls.
+// It creates the browser window and handles actual HTTP requests.
+// Using ESM (import/export) and async/await throughout.
 
-const { app, BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
-const http = require('http')
-const https = require('https')
-const { URL } = require('url')
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+// ESM modules don't have __dirname built in — we derive it from import.meta.url
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // --- WINDOW SETUP ---
 
@@ -21,7 +22,7 @@ function createWindow() {
     webPreferences: {
       // preload.js runs before the renderer and safely bridges
       // the main process and the renderer process
-      preload: path.join(__dirname, 'preload.js'),
+      preload: join(__dirname, 'preload.js'),
       // contextIsolation: true means the renderer cannot access Node.js directly
       contextIsolation: true,
       nodeIntegration: false
@@ -31,7 +32,9 @@ function createWindow() {
   win.loadFile('renderer/index.html')
 }
 
-app.whenReady().then(createWindow)
+// Top-level await is allowed in ESM — cleaner than .then()
+await app.whenReady()
+createWindow()
 
 // On macOS, re-create the window when the dock icon is clicked and no windows are open
 app.on('activate', () => {
@@ -47,78 +50,61 @@ app.on('window-all-closed', () => {
 // ipcMain.handle listens for messages sent from the renderer process.
 // The renderer sends a request config; we make the HTTP call and return the result.
 
-ipcMain.handle('send-request', async (event, requestConfig) => {
+ipcMain.handle('send-request', async (_event, requestConfig) => {
   return makeHttpRequest(requestConfig)
 })
 
 // --- HTTP REQUEST FUNCTION ---
-// Uses Node.js built-in http/https modules to make the actual network call.
+// Uses the global fetch() API (available in Node 18+ / Electron 28+).
+// AbortController lets us cancel the request if it takes too long.
 
-function makeHttpRequest(config) {
-  return new Promise((resolve, reject) => {
-    const { method, url, headers, body } = config
+async function makeHttpRequest(config) {
+  const { method, url, headers, body } = config
 
-    // Parse and validate the URL
-    let parsedUrl
-    try {
-      parsedUrl = new URL(url)
-    } catch {
-      return reject(new Error(`"${url}" is not a valid URL. Make sure it starts with http:// or https://`))
-    }
+  // Validate the URL before attempting a request
+  try {
+    new URL(url)
+  } catch {
+    throw new Error(`"${url}" is not a valid URL. Make sure it starts with http:// or https://`)
+  }
 
-    // Choose http or https module based on the URL protocol
-    const isHttps = parsedUrl.protocol === 'https:'
-    const httpModule = isHttps ? https : http
+  // AbortController lets us enforce a 30-second timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 30_000)
 
-    const options = {
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port || (isHttps ? 443 : 80),
-      path: parsedUrl.pathname + parsedUrl.search,
+  const startTime = Date.now()
+
+  try {
+    const response = await fetch(url, {
       method: method.toUpperCase(),
-      headers: headers || {},
-      // Abort the request if it takes longer than 30 seconds
-      timeout: 30000
+      headers: headers ?? {},
+      // Only attach a body for methods that support it
+      body: body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) ? body : undefined,
+      signal: controller.signal
+    })
+
+    const responseBody = await response.text()
+    const duration = Date.now() - startTime
+
+    // Convert the Headers object into a plain key/value object for easy display
+    const responseHeaders = {}
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value
+    })
+
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      body: responseBody,
+      duration
     }
-
-    const startTime = Date.now()
-
-    const req = httpModule.request(options, (res) => {
-      let responseBody = ''
-
-      // Collect response data chunk by chunk
-      res.on('data', (chunk) => {
-        responseBody += chunk
-      })
-
-      // When all data has arrived, resolve the promise with the full response
-      res.on('end', () => {
-        const duration = Date.now() - startTime
-        resolve({
-          status: res.statusCode,
-          statusText: res.statusMessage,
-          headers: res.headers,
-          body: responseBody,
-          duration
-        })
-      })
-    })
-
-    // Handle network errors (e.g. server unreachable, DNS failure)
-    req.on('error', (err) => {
-      reject(new Error(err.message))
-    })
-
-    // Handle timeout
-    req.on('timeout', () => {
-      req.destroy()
-      reject(new Error('Request timed out after 30 seconds'))
-    })
-
-    // Send request body for methods that support it
-    if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
-      req.write(body)
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out after 30 seconds')
     }
-
-    req.end()
-  })
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }

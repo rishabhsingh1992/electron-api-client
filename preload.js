@@ -5,7 +5,7 @@
 // contextBridge.exposeInMainWorld safely exposes a limited API to the renderer
 // so it can trigger Node.js operations without having full Node access.
 
-const { contextBridge, ipcRenderer } = require('electron')
+import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
   // The renderer calls window.api.sendRequest(config) to make an HTTP request.
